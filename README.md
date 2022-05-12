@@ -1,70 +1,42 @@
-# Система Сборки Android Прошивок
-*(Android Firmware Construction Kit)*
-
-AFCK это набор скриптов, используемых для (пере-)сборки прошивок ОС Android. Целью данного набора является изготовление тюнингованных прошивок, используя готовую прошивку производителя в качестве основы.
-
-В настоящий момент данные проект может использоваться для сборки прошивок под следующие устройства:
-
-* Android TV приставка X96 Max
-
-Для (пере)сборки прошивки используется сценарий для программы GNU Make и набор POSIX-совместимых утилит. Наберите "make" без параметров чтобы получить описание целей, которые можно собрать сценарием.
-
-# Подготовка к сборке
-## Базовые файлы
-
-Файлы, из которых собирается прошивка, не входят в GIT. Они слишком большие, и они часто меняются. Вам придётся найти их в сети самостоятельно. При запуске make Вам сообщат имена отсутствующих файлов.
-
-Можно попробовать запустить файл сценария ingredients/01-get-it-all. Он попытается скачать необходимые файлы из сети. Это не обязательно получится т.к. ссылки на подобные ресурсы могут часто изменяться.
-
-## apktool
-Вам необходимо установить свежий apktool отсюда:
-	https://bitbucket.org/iBotPeaches/apktool/downloads/
-
-Создайте скрипт apktool, который будет запускать `java -jar apktool-версия.jar $*`. Если Вы раньше устанавливали в apktool файлы фреймворка, очистите его:
-```
+Android Firmware Build System
+(Android Firmware Construction Kit)
+AFCK is a set of scripts used to (re-)build Android firmware. The purpose of this kit is to make tuned firmwares using the manufacturer's ready-made firmware as a basis.
+At the moment, this project can be used to build firmware for the following devices:
+•	Android TV box X96 Max
+To (re)build the firmware, a script for the GNU Make program and a set of POSIX-compliant utilities are used. Type "make" without options to get a description of the targets that can be built by the script.
+Assembly preparation
+Base files
+The files from which the firmware is built are not included in GIT. They are too big and they change frequently. You will have to find them on the net yourself. When you run make, you will be told the names of the missing files.
+You can try running the script file ingredients/01-get-it-all. It will try to download the necessary files from the network. This will not necessarily work out. links to such resources may change frequently.
+apk tool
+You need to install fresh apktool from here: https://bitbucket.org/iBotPeaches/apktool/downloads/
+Create an apktool script that will run java -jar apktool-версия.jar $*. If you have previously installed framework files in apktool, clear it:
 apktool empty-framework-dir --force
-```
-
-# Использование системы сборки
-
-Система сборки имеет встроенную систему помощи. Запуск `make` без параметров выведет полный список целей для сборки. Чтобы инициировать сборку любой цели, запустите `make <цель>`. Чтобы не захламлять основной экран помощи, многие дополнительные цели находятся на отдельных экранах. Для вывода дополнительных экранов помощи, наберите `make help-<экран>`, список имеющихся дополнительных экранов приведён на основном экране помощи, например, `make help-mod` выведет список целей для накладывания модификаций на распакованную прошивку.
-
-Переменная `TARGET` задаёт целевую платформу прошивки, например, `TARGET=x96max/beelink` задаёт сборку прошивки под аппаратную платформу x96max на базе прошивки beelink. Значение переменной TARGET задаётся либо в Makefile верхнего уровня, либо может быть переопределено в файле local-config.mak, который необходимо создать самостоятельно.
-
-Чтобы собрать конечные файлы из исходных, запустите команду `make deploy`. Если всё пройдёт успешно, Вы получите конечные файлы дистрибутива в подкаталоге out/$(TARGET)/deploy/.
-
-Если что-то не получается, можно собирать прошивку шаг за шагом. Сперва попробуйте просто распаковать исходную прошивку: `make img-unpack`. Затем накладываем модификации, либо все сразу командой `make mod`, либо по одной, используя названия целей из `make help-mod`. В конце можно собрать файлы прошивок: `make ubt-img` и `make upd`. После этого остался один маленький шажок: `make deploy` и конечные файлы готовы.
-
-
-## Разработка собственных модификаций
-Все модификации находятся в отдельных каталогах внутри подкаталога целевой платформы `build/$(TARGET)/` (например, build/x96max/beelink/). Каждая модификация находится в своём индивидуальном подкаталоге.
-
-Если Вы разрабатываете свою модификацию, Вам необходимо:
-
-* Создать подкаталог для модификации внутри каталога build/$(TARGET)/. В принципе, название может быть любым, но принято составлять название из двух цифр, тире и названия модификации. Число в начале названия подкаталога помогает отсортировать подкаталоги по порядку обработки, таким образом, модификации с более высоким номером могут пользоваться переменными, заданными модификациями с более низкими номерами.
-
-* Создать в нём файл `название-модификации.mak`, в котором определить необходимые правила наложения модификации. Будем называть содержимое этого файла *правилами модификации*.
-
-Следует учитывать, что все файлы с правилами модификации загружаются в единое пространство имён. Это значит, что если Вы определите переменную с определённым названием в одном файле, а затем переменную с таким же названием в другом файле правил модификации, второе присваивание отменит первое и модификация может произойти не так, как Вам этого хочется. Поэтому, если вводите дополнительные переменные в правила модификации, используйте название модификации как основание для название переменной. Например, если Ваша модификация называется `boom`, используйте названия переменных вида `BOOM_APK`, `BOOM_FILES` и так далее.
-
-Единственное исключение делается для переменных с фиксированными именами, которые задают каким именно образом будет накладываться модификация:
-
-* `HELP` содержит описание модификации. Этот текст выдаётся пользователю по команде `make help-mod`.
-* `DISABLED` - если эта переменная получает непустое значение, мод будет выключен. Данную переменную можно использовать для временного отключения определённых модов (без необходимости удалять или переименовывать файл .mak).
-* `INSTALL` содержит, собственно, последовательность инструкций по накладыванию модификации на распакованный образ.
-* `MOD` содержит название мода
-* `DIR` содержит название подкаталога мода. Используйте для доступа к дополнительным файлам, например `$(DIR)/boom.apk` и так далее.
-* `DEPS` содержит список файлов, от которых зависит мод. При изменении любого из этих файлов система сборки сочтёт, что мод необходимо переналожить. По умолчанию в переменную `DIR` добавляются все файлы из подкаталога мода (*но не из вложенных подкаталогов*).
-* `/` - переменная с таким смешным названием очень полезна, т.к. содержит базовый каталог, в котором находятся распакованные образы файловых систем. В GNU Make переменные с названием из одного символа можно не брать в круглый скобки: `$/` эквивалентно `$(/)`. Используйте эту переменную для удобной работы с файлами распакованного образа, например: `cp $(DIR)/boom.apk $/system/app`
-
-Также для некоторых задач существуют полезные функции, которые можно вызвать:
-
-* `$(call IMG.UNPACK.EXT4,<раздел>)` создаст зависимость текущего мода от распакованного образа указанного раздела. Наприемр, `$(call IMG.UNPACK.EXT4,system)` создаст такую зависимость, чтобы перед началом наложения мода раздел `system` уже был распакован в каталог `$/`, таким образом, Вы сможете сразу писать правила вида `rm $/system/build.prop` и т.п. Если не вызвать этой функции, существование подкаталога `$/system` не гарантируется на момент начала выполнения правил мода, особенно при многопоточной сборке.
-* `$(call MOD.APK,<раздел>,<файл.apk>,<описание>)` создаёт полный набор правил для установки APK файла в подкаталог app/ указанного раздела (обычно system или vendor). Простейший мод для добавления определённого приложения может состоять из одной строки вызова этой функции.
-
-В принципе, сказанного выше должно хватать для начала работы. Если же возникнет желание узнать подробнее, как работает систему сборки изнутри, см. следующий раздел.
-
-# Как работает система сборки
-
-Работа системы сборки подробнее описана в файле doc/HOWITWORKS.md. Если что-то пошло не так, или Вы собираетесь разрабатывать на базе afck, рекомендуем этот файл к прочтению.
+Using the build system
+The build system has a built-in help system. Running make without options will list the complete list of build targets. To initiate a build on any target, run make <purpose>. In order not to clutter up the main help screen, many additional objectives are on separate screens. To display additional help screens, type make help-<screen>, the list of available additional screens is given on the main help screen, for example, it make help-mod will list targets for applying modifications to the unpacked firmware.
+The variable TARGET sets the target firmware platform, for example, TARGET=x96max/beelink sets the firmware assembly for the x96max hardware platform based on the beelink firmware. The value of the TARGET variable is either set in the top-level Makefile, or can be overridden in the local-config.mak file, which you must create yourself.
+To build target files from source files, run the command make deploy. If everything goes well, you will receive the final distribution files in the out/$(TARGET)/deploy/ subdirectory.
+If something does not work out, you can build the firmware step by step. First, try simply unpacking the original firmware: make img-unpack. Then we apply modifications, either all at once with the command make mod, or one at a time, using the names of targets from make help-mod. At the end, you can collect the firmware files: make ubt-img and make upd. After that, there was one small step left: make deploy and the final files are ready.
+Development of own modifications
+All modifications are in separate directories within the target platform subdirectory build/$(TARGET)/(eg build/x96max/beelink/). Each modification is in its own individual subdirectory.
+If you are developing your own modification, you need to:
+•	Create a subdirectory for modification inside the build/$(TARGET)/ directory. In principle, the name can be anything, but it is customary to make up the name of two numbers, a dash and the name of the modification. The number at the beginning of the subdirectory name helps sort the subdirectories in order of processing, so higher numbered revisions can use the variables specified by lower numbered revisions.
+•	Create a file in it name-modifications.mak, in which to define the necessary rules for applying the modification. We will call the contents of this file modification rules .
+Keep in mind that all files with modification rules are loaded into a single namespace. This means that if you define a variable with the same name in one file and then a variable with the same name in another modification rules file, the second assignment will override the first one and the modification may not happen the way you want it to. Therefore, if you introduce additional variables in modification rules, use the modification name as the basis for the variable name. For example, if your modification is called Boom, use variable names like BOOM_APK, BOOM_FILES and so on.
+The only exception is for variables with fixed names, which specify how the modification will be applied:
+•	HELP contains a description of the modification. This text is issued to the user on command make help-mod.
+•	DISABLED- if this variable gets a non-empty value, the mod will be disabled. This variable can be used to temporarily disable certain mods (without having to delete or rename the .mak file).
+•	INSTALL contains, in fact, a sequence of instructions for applying a modification to the unpacked image.
+•	MOD contains the name of the mod
+•	DIR contains the name of the mod subdirectory. Use to access additional files, such as $(DIR)/boom.apk and so on.
+•	DEP Scontains a list of files the mod depends on. If you change any of these files, the build system will consider that the mod needs to be remapped. 
+•	DIR By default , all files from the mod subdirectory are added to the variable ( but not from nested subdirectories ).
+•	/- a variable with such a funny name is very useful, because contains the base directory where the unpacked file system images are located. In GNU Make, single-character variables need not be enclosed in parentheses: $/equivalent to $(/). Use this variable to conveniently work with unpacked image files, for example:cp $(DIR)/boom.apk $/system/app
+Also, for some tasks, there are useful functions that can be called:
+•	$(call IMG.UNPACK.EXT4,<partition>)will create a dependency of the current mod on the unpacked image of the specified section. 
+•	For example, $(call IMG.UNPACK.EXT4,system)it will create such a dependency that before the mod starts, the section system will already be unpacked into the directory $/, so you can immediately write the rules of the form rm $/system/build.prop, etc. If you do not call this function, the existence of the subdirectory $/system is not guaranteed at the time the rules of the mod are executed, especially in multi-threaded builds.
+•	$(call MOD.APK,<partition>,<file.apk>,<description>)creates a complete set of rules for installing an APK file in the app/ subdirectory of the specified partition (usually system or vendor). The simplest mod for adding a specific application might be a single line call to that function.
+In principle, the above should be enough to get started. If you want to learn more about how the build system works from the inside, see the next section.
+How the build system works
+The work of the build system is described in more detail in the doc/HOWITWORKS.md file. If something went wrong, or you are going to develop based on afck, we recommend reading this file.
 
