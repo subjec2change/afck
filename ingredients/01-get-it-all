@@ -1,10 +1,9 @@
 #!/bin/sh
 #
-# Этот сценарий попытается скачать все нужне компоненты из разных мест в Интернете.
-# Так как Интернет это динамически изменяющаяся среда, нет гарантии, что все ссылки
-# рабочие, но надеюсь, что большинство файлов всё-таки будет скачано. Остальное можно
-# попытаться найти самостоятельно.
-#
+# This script will try to download all the necessary components from various places on the Internet. 
+# Since the Internet is a dynamic environment, there is no guarantee that all links will 
+# work, but I hope that most files will still be downloaded. 
+#You can try to find the rest yourself.
 
 WHITE="[1;37m"
 LRED="[1;31m"
